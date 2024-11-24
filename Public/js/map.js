@@ -1,47 +1,44 @@
-// Initialize the map
-var map = L.map('map').setView([19.0760, 72.8777], 13);
+// Initialize the map (set to a default location, here Mumbai)
+var map = L.map('map').setView([19.0760, 72.8777], 13);  // Default to Mumbai
 
-// Add OpenStreetMap tiles
+// Add OpenStreetMap tiles to the map
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
-// Add a geocoder control
-L.Control.geocoder({
-    defaultMarkGeocode: false
-})
-.on('markgeocode', function(e) {
-    var bbox = e.geocode.bbox;
-    var poly = L.polygon([
-        [bbox.getSouthEast().lat, bbox.getSouthEast().lng],
-        [bbox.getNorthEast().lat, bbox.getNorthEast().lng],
-        [bbox.getNorthWest().lat, bbox.getNorthWest().lng],
-        [bbox.getSouthWest().lat, bbox.getSouthWest().lng]
-    ]).addTo(map);
-    map.fitBounds(poly.getBounds());
-    L.marker(e.geocode.center).addTo(map)
-        .bindPopup(e.geocode.name)
-        .openPopup();
-})
-.addTo(map);
-
-
+// Handle search button click
 document.getElementById('search-btn').addEventListener('click', function() {
-    var searchInput = document.getElementById('search-location').value;
+    var searchInput = document.getElementById('search-location').value;  // Get the search input value
 
-    // Use Geocoder to find the location
-    L.Control.Geocoder.nominatim().geocode(searchInput, function(results) {
-        if (results.length > 0) {
-            var result = results[0];
-            map.setView(result.center, 13);
+    if (searchInput) {
+        const apiKey = '7e9d2709356a488198093e474522a9a2';  // Replace with your OpenCage API Key
 
-            L.marker(result.center).addTo(map)
-                .bindPopup(result.name)
-                .openPopup();
-        } else {
-            alert('Location not found');
-        }
-    });
+        // Fetch geocoding data from OpenCage API
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(searchInput)}&key=${apiKey}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.results.length > 0) {
+                    const { lat, lng } = data.results[0].geometry;  // Get the latitude and longitude
+                    const { formatted } = data.results[0];         // Get the formatted address
+
+                    // Update the map view and zoom to the new location
+                    map.setView([lat, lng], 13);
+
+                    // Add a marker on the map for the location
+                    L.marker([lat, lng])
+                        .addTo(map)
+                        .bindPopup(`<b>${formatted}</b>`)  // Show the formatted address in the popup
+                        .openPopup();
+                } else {
+                    alert('Location not found. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Geocoding error:', error);
+                alert('There was an error fetching the location. Please try again later.');
+            });
+    } else {
+        alert('Please enter a location to search.');
+    }
 });
-

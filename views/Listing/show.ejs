@@ -10,11 +10,11 @@
     <div class="card col-6 offset-3 show-card listing-card">
         <img src="<%= listing.image.url %>" class="card-img-top show-img" alt="listing_img">
         <div class="card-body">
-            <p class="card-text">Owned by <i><%= listing.owner.username %></i> </P>
-            <P class="card-text"> <%= listing.description %> </P>
-            <P class="card-text"> &#8377; <%= listing.price.toLocaleString("en-IN") %> </P>
-            <P class="card-text">   <%= listing.location %> </P>
-            <P class="card-text"> <%= listing.country %> </P>
+            <p class="card-text">Owned by <i><%= listing.owner.username %></i> </p>
+            <p class="card-text"><%= listing.description %> </p>
+            <p class="card-text"> &#8377; <%= listing.price.toLocaleString("en-IN") %> </p>
+            <p class="card-text"><%= listing.location %> </p>
+            <p class="card-text"><%= listing.country %> </p>
         </div>
     </div>
 
@@ -22,25 +22,18 @@
     <div class="btns">
         <a href="/Listings/<%= listing._id %>/edit" class="btn btn-dark col-1 offset-3 edit-btn">Edit</a>
 
-          <form method="post" action="/Listings/<%= listing._id %>?_method=DELETE">
+        <form method="post" action="/Listings/<%= listing._id %>?_method=DELETE">
             <button type="submit" class="btn btn-dark offset-3">Delete</button>
         </form>
     </div>
-
     <% } %>
 
-    <!--reviews -->
+    <!-- reviews -->
     <div class="col-8 offset-2 mb-3">
         <hr>
         <% if(currUser){ %>
         <h4>Leave a review</h4>
         <form action="/Listings/<%=listing.id %>/Review" method="post" novalidate class="needs-validation">
-            
-            <!-- <div class="mb-3 mt-3">
-                <label for="rating" class="form-label">Rating</label>
-                <input type="range" min="1" max="5" id="rating" name="review[rating]" class="form-range">
-            </div> -->
-
             <div class="mb-3 mt-3">
                 <label for="rating" class="form-label">Rating</label>
                 <fieldset class="starability-basic">
@@ -56,53 +49,51 @@
                     <label for="first-rate4" title="Very good">4 stars</label>
                     <input type="radio" id="first-rate5" name="review[rating]" value="5" />
                     <label for="first-rate5" title="Amazing">5 stars</label>
-              </fieldset>
+                </fieldset>
             </div>
             
-            <br><br>
             <div class="mb-3 mt-3">
                 <label for="comment" class="form-label">Comments</label>
-            <textarea name="review[comment]" id="comment" cols="30" rows="5" class="form-control" required></textarea>
-            <div class="invalid-feedback">please add some comments for review</div>
+                <textarea name="review[comment]" id="comment" cols="30" rows="5" class="form-control" required></textarea>
+                <div class="invalid-feedback">Please add some comments for review</div>
             </div>
-            <br>
             <button class="btn btn-outline-dark">Submit</button>
         </form>
         
         <hr>
         <% }  %>
 
-       <% if(listing.reviews.length > 0 ){ %>
+        <% if(listing.reviews.length > 0 ){ %>
         <div class="row">
             <p><b>All Reviews</b></p>
-                <% for(review of listing.reviews) { %>
+            <% for(review of listing.reviews) { %>
             <div class="card col-5 ms-3 mb-3">
                 <div class="card-body">
                     <h5 class="card-title">@<%= review.author.username %></h5>
                     <p class="starability-result card-text" data-rating="<%= review.rating %>"></p>
                     <p class="card-text"><%= review.comment %></p>
                 </div>
-                <br>
                 <form method="post" action="/Listings/<%= listing._id %>/review/<%= review._id %>?_method=DELETE">
                     <button class="btn btn-sm btn-dark">Delete</button>
                 </form>
-                
             </div>
-                <% } %>
-           
+            <% } %>
         </div>
         <% } %>
     </div>
+    
     <div class="col-8 offset-3 mb-3">
         <h3>Where you’ll be</h3>
         <div class="mb-3">
             <input id="search-location" type="text" placeholder="Enter location" class="form-control" />
             <button id="search-btn" class="btn btn-primary mt-2">Search</button>
         </div>
-
-        <div id="map"></div>
-        
-
+    
+        <div id="map" style="height: 400px;"></div> <!-- Make sure the map div has a height -->
     </div>
-   <script src="/js/map.js"></script>
+    
+
+    <!-- Map.js Script -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/js/map.js"></script>
 </body>
