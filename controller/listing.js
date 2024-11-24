@@ -1,4 +1,8 @@
-const Listing = require("../models/listing")
+const Listing = require("../models/listing.js")
+const fetch = require('node-fetch');
+
+
+// const Listing = require("../models/listing");
 
 module.exports.index = async(req,res) => {
     const allListings =  await Listing.find({});
@@ -20,6 +24,8 @@ module.exports.showListing =  async (req,res) => {
    console.log(listing);
    res.render("Listing/show.ejs",{listing});
 }
+
+
 module.exports.createListing = async (req, res, next) => {
     try {
         console.log("Create Listing Controller Triggered");
@@ -35,13 +41,38 @@ module.exports.createListing = async (req, res, next) => {
             throw new Error("File upload is required.");
         }
 
-        // Create the new listing
-        const newListing = new Listing(listing);
-        newListing.owner = req.user._id;
-        newListing.image = {
-            url: req.file.path,
-            filename: req.file.filename,
-        };
+        // Fetch location coordinates using OpenCage Geocoding API
+        const location = listing.location;
+        const apiKey = '7e9d2709356a488198093e474522a9a2'; // Replace with your OpenCage API key
+
+        const geocodeResponse = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(location)}&key=${apiKey}`);
+        if (!geocodeResponse.ok) {
+            console.error('Geocoding API error:', geocodeResponse.status, geocodeResponse.statusText);
+            throw new Error('Failed to fetch geocoding data');
+        }
+        const geocodeData = await geocodeResponse.json();
+        console.log('Geocoding Data:', JSON.stringify(geocodeData, null, 2));
+
+        if (geocodeData.results.length === 0) {
+            req.flash("error", "Location not found");
+            return res.redirect("/Listings/new");
+        }
+
+        const { lat, lng } = geocodeData.results[0].geometry;
+
+        // Create the new listing with the fetched latitude and longitude
+        const newListing = new Listing({
+            ...listing,
+            geometry: {
+                type: "Point",
+                coordinates: [lng, lat], // GeoJSON expects [longitude, latitude]
+            },
+            owner: req.user._id,
+            image: {
+                url: req.file.path,
+                filename: req.file.filename,
+            },
+        });
 
         console.log("New Listing Object:", newListing);
 
@@ -56,6 +87,7 @@ module.exports.createListing = async (req, res, next) => {
         next(err); // Pass the error to error-handling middleware
     }
 };
+
 
 
 module.exports.renderEditform = async(req,res) => {

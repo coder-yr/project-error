@@ -9,30 +9,49 @@ const listingSchema = new Schema({
   },
   description: String,
   image: {
-    url : String ,
-    filename : String ,
+    url: String,
+    filename: String,
   },
   price: Number,
   location: String,
   country: String,
-  reviews : [
+  geometry: {
+    type: {
+      type: String,
+      enum: ["Point"], // 'Point' is required for GeoJSON
+      required: true,
+    },
+    coordinates: {
+      type: [Number], // Array of numbers [longitude, latitude]
+      required: true,
+    },
+  },
+  reviews: [
     {
-      type : Schema.Types.ObjectId,
-      ref : "Review"
-    }
+      type: Schema.Types.ObjectId,
+      ref: "Review",
+    },
   ],
-  owner : {
-    type : Schema.Types.ObjectId ,
-    ref : "User"
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
   },
 });
 
-
-listingSchema.post("findOneAndDelete" , async(listing) => {
-  if(listing){
-    await Review.deleteMany({_id : {$in : listing.reviews}});
+// Post middleware to delete associated reviews when a listing is deleted
+listingSchema.post("findOneAndDelete", async (listing) => {
+  if (listing) {
+    try {
+      // Deleting all reviews associated with the listing
+      await Review.deleteMany({ _id: { $in: listing.reviews } });
+      console.log(`Successfully deleted reviews for listing: ${listing._id}`);
+    } catch (err) {
+      console.error(`Error deleting reviews for listing: ${listing._id}`, err);
+    }
+  } else {
+    console.log(`No listing found to delete reviews for.`);
   }
-})
+});
 
 const Listing = mongoose.model("Listing", listingSchema);
 module.exports = Listing;
